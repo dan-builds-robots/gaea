@@ -117,8 +117,13 @@ const UserRoutes = ({ route, navigation }) => {
           renderItem={renderItem}
           keyExtractor={(item, index) => item.name + JSON.stringify(item.locations)}
           ItemSeparatorComponent={
-            <View style={{ backgroundColor: "gray", height: 0.25 }} key={"asdf"} />
+            <View style={{ 
+            // borderBottomColor: 'red',
+            height: 0.6,
+            backgroundColor: "gray",
+            marginVertical: -0.3, }} key={"asdf"} />
           }
+          // contentContainerStyle={{backgroundColor: "gray"}}
           activationDistance={1}
         />
       </GestureHandlerRootView>
