@@ -325,7 +325,7 @@ const RouteMap = ({
             }}
           >
             <TextInput
-              style={[styles.routeName, { flexGrow: 1 }]}
+              style={[styles.routeName, { flexGrow: 1, flex: 1 }]}
               placeholder="Enter Route Name"
               onChangeText={(newRouteName) => {
                 console.log(

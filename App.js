@@ -1,21 +1,19 @@
-import { NavigationContainer } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { TouchableOpacity } from "react-native";
-import Map from "./screens/Map";
+import {NavigationContainer} from "@react-navigation/native";
+import {createNativeStackNavigator} from "@react-navigation/native-stack";
+import {TouchableOpacity} from "react-native";
 import UserRoutes from "./screens/UserRoutes";
 import RouteMap from "./screens/RouteMap";
-import { FontAwesome } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {FontAwesome} from "@expo/vector-icons";
 import SearchLocation from "./screens/SearchLocation";
-import { Provider, connect } from "react-redux";
-import { addRoute } from "./routesSlice";
-import { store } from "./store.js";
+import {Provider, connect} from "react-redux";
+import {addRoute} from "./routesSlice";
+import {store} from "./store.js";
 
 export default function App() {
   const Stack = createNativeStackNavigator();
 
-  const HeaderBtn = connect((state) => ({ routes_: state.routes }))(
-    ({ routes_, dispatch, navigation }) => {
+  const HeaderBtn = connect((state) => ({routes_: state.routes}))(
+    ({routes_, dispatch, navigation}) => {
       return (
         <TouchableOpacity
           onPress={() => {
@@ -27,7 +25,7 @@ export default function App() {
                 locations: [
                   {
                     dummyLocation: true,
-                    coords: { latitude: 0, longitude: 0 },
+                    coords: {latitude: 0, longitude: 0},
                     // key: -1,
                   },
                 ],
@@ -46,21 +44,13 @@ export default function App() {
 
   return (
     <Provider store={store}>
-      <NavigationContainer
-        onReady={() => {
-          console.log("Navigation container is ready");
-          AsyncStorage.getItem("routes").then((routes) => {
-            console.log("Just opened app; routes:" + routes);
-          });
-        }}
-      >
-        <Stack.Navigator screenOptions={{ animation: "none" }}>
-
+      <NavigationContainer onReady={() => {}}>
+        <Stack.Navigator screenOptions={{animation: "none"}}>
           {/* routes screen */}
           <Stack.Screen
             name="Routes"
             component={UserRoutes}
-            options={({ navigation }) => ({
+            options={({navigation}) => ({
               headerRight: () => <HeaderBtn navigation={navigation} />,
             })}
           />
@@ -69,13 +59,13 @@ export default function App() {
           <Stack.Screen
             name="RouteMap"
             component={RouteMap}
-            options={{ headerShown: false }}
+            options={{headerShown: false}}
           />
 
           <Stack.Screen
             name="Search Locations"
             component={SearchLocation}
-            options={{ title: "" }}
+            options={{title: ""}}
           />
         </Stack.Navigator>
       </NavigationContainer>
