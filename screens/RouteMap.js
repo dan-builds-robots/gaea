@@ -8,6 +8,8 @@ import {
   Alert,
   TextInput,
   KeyboardAvoidingView,
+  SafeAreaView,
+  Vibration,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
@@ -19,6 +21,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Entypo, FontAwesome } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import DismissKeyboardView from "../DismissKeyboardView";
+import SlidingUpPanel from "rn-sliding-up-panel";
 import {
   changeRouteName,
   updateRouteLocations,
@@ -32,39 +35,33 @@ const RouteMap = ({
   },
   navigation,
 }) => {
-  const routes = useSelector((state) => state.routes);
+  const routes = useSelector((state) => state.routes.routes);
   const dispatch = useDispatch();
   [searchPhrase, setSearchPhrase] = useState(false);
   const [userRegion, setUserRegion] = useState({});
   const [actualRegion, setActualRegion] = useState({});
   const [animating, setAnimating] = useState(false);
+  const [dragging, setDragging] = useState(false);
   let _mapView;
+  let panel;
   const GOOGLE_API_KEY = "AIzaSyBh1qntBtOC9rAx1gAXDvSnwYgVgiSc_rU";
 
   useEffect(() => {
-    console.log("Going to route location")
+    // panel.show();
+    console.log("Going to route location");
     goToRouteLocation(_mapView);
-
-    // const unsubscribe = navigation.addListener("focus", () => {
-    //   console.log("Does this get called?");
-    //   goToRouteLocation(_mapView);
-    // });
-    // return unsubscribe;
-  }, [
-    routes["routes"][index].midpointLatitude,
-    routes["routes"][index].midpointLongitude,
-  ]);
+  }, [routes[index].midpointLatitude, routes[index].midpointLongitude]);
 
   const getInitialRegion = () => {
     if (
-      routes["routes"][index].midpointLatitude == 0 &&
-      routes["routes"][index].midpointLongitude == 0
+      routes[index].midpointLatitude == 0 &&
+      routes[index].midpointLongitude == 0
     ) {
       return userRegion;
     } else {
       return {
-        latitude: routes["routes"][index].midpointLatitude,
-        longitude: routes["routes"][index].midpointLongitude,
+        latitude: routes[index].midpointLatitude,
+        longitude: routes[index].midpointLongitude,
         latitudeDelta: 0.02,
         longitudeDelta: 0.02,
       };
@@ -74,15 +71,15 @@ const RouteMap = ({
   const goToRouteLocation = async (mapView) => {
     setAnimating(true);
     if (
-      routes["routes"][index].midpointLatitude == 0 &&
-      routes["routes"][index].midpointLongitude == 0
+      routes[index].midpointLatitude == 0 &&
+      routes[index].midpointLongitude == 0
     ) {
       mapView.animateToRegion(userRegion, 1000);
       setActualRegion(userRegion);
     } else {
       const region = {
-        latitude: routes["routes"][index].midpointLatitude,
-        longitude: routes["routes"][index].midpointLongitude,
+        latitude: routes[index].midpointLatitude,
+        longitude: routes[index].midpointLongitude,
         latitudeDelta: 0.02,
         longitudeDelta: 0.02,
       };
@@ -137,9 +134,26 @@ const RouteMap = ({
             },
           ]}
         >
-          <View style={{ flexDirection: "row", alignItems: "stretch" }}>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "stretch",
+            }}
+          >
             <TouchableOpacity
-              onLongPress={drag}
+              onLongPress={() => {
+                // if (Platform.OS === "ios") {
+                //   // this logic works in android too. you could omit the else statement
+                //   const interval = setInterval(() => Vibration.vibrate(), 1000);
+                //   // it will vibrate for 5 seconds
+                //   setTimeout(() => clearInterval(interval), 2000);
+                // } else {
+                //   Vibration.vibrate(5000);
+                // }
+                drag();
+                setDragging(true);
+              }}
+              onPressOut={() => setDragging(false)}
               delayLongPress={300}
               activeOpacity={1}
               style={{
@@ -155,21 +169,30 @@ const RouteMap = ({
                 onPress={() =>
                   navigation.navigate("Search Locations", { routeIndex: index })
                 }
-                style={{ justifyContent: "center", width: "100%" }}
+                style={{
+                  justifyContent: "center",
+                  width: "100%",
+                }}
               >
                 <Text
                   placeholder="Add Destination"
                   style={{
-                    width: "100%",
                     color: "gray",
-                    alignSelf: "center",
                   }}
+                  numberOfLines={1}
                 >
                   Add Destination
                 </Text>
               </TouchableOpacity>
             ) : (
-              <Text style={{ alignSelf: "center" }}>{name}</Text>
+              <Text
+                style={{
+                  alignSelf: "center",
+                }}
+                numberOfLines={1}
+              >
+                {name}
+              </Text>
             )}
           </View>
           {!dummyLocation && (
@@ -183,11 +206,7 @@ const RouteMap = ({
               onPress={() => {
                 Alert.alert(
                   "Remove From Route",
-                  'Are you sure you want to remove "' +
-                    name +
-                    " at index " +
-                    getIndex() +
-                    '" from this route?',
+                  `Are you sure you want to remove ${name} from this route?`,
                   [
                     {
                       text: "Cancel",
@@ -231,7 +250,7 @@ const RouteMap = ({
   );
 
   return (
-    <DismissKeyboardView style={{ flex: 1 }}>
+    <DismissKeyboardView style={{ flex: 1, backgroundColor: "blue" }}>
       <MapView
         ref={(mapView) => {
           _mapView = mapView;
@@ -245,7 +264,7 @@ const RouteMap = ({
         // legalLabelInset={}
       >
         {/* put the markers on the map */}
-        {routes["routes"][index].locations.map(
+        {routes[index].locations.map(
           ({ coords: { latitude, longitude }, dummyLocation }) =>
             !dummyLocation && (
               <Marker
@@ -258,14 +277,13 @@ const RouteMap = ({
         )}
 
         {/* draw the route lines between the markers */}
-        {routes["routes"][index].locations
+        {routes[index].locations
           .slice(
             0,
-            routes["routes"][index].locations[
-              routes["routes"][index].locations.length - 1
-            ].dummyLocation
-              ? routes["routes"][index].locations.length - 2
-              : routes["routes"][index].locations.length - 1
+            routes[index].locations[routes[index].locations.length - 1]
+              .dummyLocation
+              ? routes[index].locations.length - 2
+              : routes[index].locations.length - 1
           )
           .map(
             (
@@ -277,12 +295,9 @@ const RouteMap = ({
                   // origin={coords}
                   origin={{ latitude: latitude, longitude: longitude }}
                   destination={
-                    !routes["routes"][index].locations[locationIndex + 1]
-                      .dummyLocation
-                      ? routes["routes"][index].locations[locationIndex + 1]
-                          .coords
-                      : routes["routes"][index].locations[locationIndex + 2]
-                          .coords
+                    !routes[index].locations[locationIndex + 1].dummyLocation
+                      ? routes[index].locations[locationIndex + 1].coords
+                      : routes[index].locations[locationIndex + 2].coords
                   }
                   apikey={GOOGLE_API_KEY}
                   strokeWidth={4}
@@ -299,7 +314,6 @@ const RouteMap = ({
             position: "absolute",
             right: 30,
             top: 60,
-            //   backgroundColor: "red",
             borderRadius: 1000,
           }}
           onPress={() => {
@@ -315,80 +329,111 @@ const RouteMap = ({
         </TouchableOpacity>
       )}
 
-      <KeyboardAvoidingView behavior="position">
-        <View style={[styles.routeView, styles.searchShadow]}>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginBottom: 10,
-            }}
-          >
-            <TextInput
-              style={[styles.routeName, { flexGrow: 1, flex: 1 }]}
-              placeholder="Enter Route Name"
-              onChangeText={(newRouteName) => {
-                console.log(
-                  "changing route name. index: " +
-                    index +
-                    "; routes:" +
-                    JSON.stringify(routes)
-                );
-                dispatch(
-                  changeRouteName({ index: index, newRouteName: newRouteName })
-                );
+      <KeyboardAvoidingView
+        behavior="position"
+        style={{
+          backgroundColor: "red",
+          position: "absolute",
+          bottom: 0,
+          width: "100%",
+        }}
+      >
+        <SlidingUpPanel
+          ref={(c) => {
+            panel = c;
+          }}
+          draggableRange={{ top: 280, bottom: 80 }}
+          snappingPoints={[80, 280]}
+          allowDragging={!dragging}
+          minimumVelocityThreshold={300}
+          minimumDistanceThreshold={50}
+        >
+          <View style={[styles.routeView, styles.searchShadow]}>
+            {/* gray slider */}
+            <TouchableOpacity>
+              <View
+                style={{
+                  alignSelf: "center",
+                  width: 60,
+                  height: 5,
+                  borderRadius: "100%",
+                  backgroundColor: "lightgray",
+                  marginBottom: 20,
+                }}
+              />
+            </TouchableOpacity>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 10,
               }}
             >
-              {route_.name}
-            </TextInput>
+              <TextInput
+                style={[styles.routeName, { flexGrow: 1, flex: 1 }]}
+                placeholder="Enter Route Name"
+                onChangeText={(newRouteName) => {
+                  console.log(
+                    "changing route name. index: " +
+                      index +
+                      "; routes:" +
+                      JSON.stringify(routes)
+                  );
+                  dispatch(
+                    changeRouteName({
+                      index: index,
+                      newRouteName: newRouteName,
+                    })
+                  );
+                }}
+              >
+                {route_.name}
+              </TextInput>
 
-            <Entypo
-              name="cross"
-              size={20}
-              color="gray"
-              style={{ padding: 1 }}
-              onPress={() =>
-                navigation.navigate("Routes", {
-                  routes: routes,
-                })
-              }
-            />
-          </View>
-          <GestureHandlerRootView>
-            <DraggableFlatList
-              style={{ marginBottom: 10, maxHeight: 185 }}
-              data={routes["routes"][index].locations}
-              renderItem={renderItem}
-              overScrollMode="never"
-              onDragEnd={({ data: routeLocations }) => {
-                dispatch(
-                  updateRouteLocations({
-                    index: index,
-                    newLocations: routeLocations,
+              <Entypo
+                name="cross"
+                size={20}
+                color="gray"
+                style={{ padding: 1 }}
+                onPress={() =>
+                  navigation.navigate("Routes", {
+                    routes: routes,
                   })
-                );
-                // goToRouteLocation(_mapView);
-              }}
-              bounces={false}
-              keyExtractor={(item, index) => item.name}
-              onMoveEnd={({ data }) => {
-                this.setState({ scrollEnabled: true, data });
-              }}
-              // ListFooterComponent={() => {
-              //   return (
-              //     <View style={{ backgroundColor: "red", padding: 10 }}></View>
-              //   );
-              // }}
-            ></DraggableFlatList>
-          </GestureHandlerRootView>
-        </View>
+                }
+              />
+            </View>
+            <GestureHandlerRootView>
+              <DraggableFlatList
+                style={{ marginBottom: 10, maxHeight: 170 }}
+                data={routes[index].locations}
+                renderItem={renderItem}
+                overScrollMode="never"
+                onDragEnd={({ data: routeLocations }) => {
+                  dispatch(
+                    updateRouteLocations({
+                      index: index,
+                      newLocations: routeLocations,
+                    })
+                  );
+                  // goToRouteLocation(_mapView);
+                }}
+                bounces={false}
+                keyExtractor={(item, index) => item.name}
+                onMoveEnd={({ data }) => {
+                  this.setState({ scrollEnabled: true, data });
+                }}
+              />
+            </GestureHandlerRootView>
+          </View>
+        </SlidingUpPanel>
       </KeyboardAvoidingView>
     </DismissKeyboardView>
   );
 };
 const styles = StyleSheet.create({
   map: {
-    flex: 1,
+    // flex: 1,
+    flexGrow: 1,
   },
   searchShadow: {
     shadowOffset: {
@@ -401,12 +446,14 @@ const styles = StyleSheet.create({
   routeView: {
     bottom: 0,
     width: "100%",
-    height: 270,
+    height: 280,
+    // height: "100%",
     backgroundColor: "white",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    position: "absolute",
+    // position: "absolute",
     padding: 24,
+    paddingTop: 16,
   },
   routeName: {
     fontSize: 16,

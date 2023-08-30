@@ -60,11 +60,8 @@ const SearchLocation = ({
               details?.geometry?.location
             )}`
           );
-          //   alert("coordinates: " + JSON.stringify(data?.geometry?.location));
           const name = data.structured_formatting.main_text;
-          // const location = getCoordinates(data.place_id);
-          // const { lat, lng } = getCoordinates(data.place_id);
-          // alert(`coordinates. lat: ${lat}; longitude: ${lng}`);
+          const address = data.description;
 
           placeId = data.place_id;
           key = "AIzaSyBh1qntBtOC9rAx1gAXDvSnwYgVgiSc_rU";
@@ -84,6 +81,7 @@ const SearchLocation = ({
                   newLocation: {
                     name: name,
                     coords: { latitude: lat, longitude: lng },
+                    address: address,
                     // key: 7,
                   },
                 })

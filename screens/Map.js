@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
-import { StyleSheet, View, Image, TouchableOpacity, Text } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import { useState, useEffect } from "react";
+import { StyleSheet, View, Image, TouchableOpacity } from "react-native";
+import MapView from "react-native-maps";
 import SearchBar from "../SearchBar";
 import * as Location from "expo-location";
-import MapViewDirections from "react-native-maps-directions";
-import { useFocusEffect } from "@react-navigation/native";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchRoutes } from "../routesSlice";
 

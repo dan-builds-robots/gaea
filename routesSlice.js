@@ -5,6 +5,7 @@ const initialState = {
   // value: await AsyncStorage.getItem("routes"),
   routes: [],
   status: "idle",
+  // userLocation: null,/////
 };
 
 export const fetchRoutes = createAsyncThunk("users/fetchRoutes", async () => {
@@ -12,6 +13,7 @@ export const fetchRoutes = createAsyncThunk("users/fetchRoutes", async () => {
 });
 
 const saveRoutes = (routes) => {
+  console.log(`setting routes equal to something: ${JSON.stringify(routes)}`);
   AsyncStorage.setItem("routes", JSON.stringify(routes));
 };
 
@@ -19,7 +21,6 @@ export const routesSlice = createSlice({
   name: "routes",
   initialState,
   reducers: {
-
     addRoute: (state) => {
       newRoute = {
         name: "",
@@ -93,11 +94,6 @@ export const routesSlice = createSlice({
       state,
       { payload: { index, newLocations }, type }
     ) => {
-      // console.log(
-      //   `updating route locations. Current: ${
-      //     state.routes[index].locations
-      //   }; new: ${JSON.stringify(newLocations)}`
-      // );
       state.routes[index].locations = newLocations;
 
       if (state.routes[index].locations.length <= 1) {
@@ -150,9 +146,12 @@ export const routesSlice = createSlice({
     },
 
     removeEmptyRoutes: (state, payload) => {
-      state.routes = state.routes.filter((route) => !(route.name == '' && route.locations.length == 1))
+      state.routes = state.routes.filter(
+        (route) => !(route.name == "" && route.locations.length == 1)
+      );
+      console.log(`removed empty routes: ${JSON.stringify(state.routes)}`);
       saveRoutes(state.routes);
-    }
+    },
   },
   extraReducers(builder) {
     builder
@@ -161,7 +160,7 @@ export const routesSlice = createSlice({
       })
       .addCase(fetchRoutes.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Add any fetched posts to the array
+        // Add any fetched routes to the array
         const routes = action.payload ? action.payload : [];
         state.routes = routes;
       })
@@ -181,7 +180,7 @@ export const {
   addRouteLocation,
   updateRouteLocations,
   deleteRouteLocation,
-  removeEmptyRoutes
+  removeEmptyRoutes,
 } = routesSlice.actions;
 
 export default routesSlice.reducer;

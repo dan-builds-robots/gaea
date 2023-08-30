@@ -30,7 +30,8 @@
     "react-native-screens": "~3.22.0",
     "react-native-swipeable-item": "^2.0.9",
     "react-native-swipeable-list": "^0.1.2",
-    "react-redux": "^8.1.2"
+    "react-redux": "^8.1.2",
+    "rn-sliding-up-panel": "^2.4.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
