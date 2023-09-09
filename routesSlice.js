@@ -1,16 +1,36 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
 
 const initialState = {
-  // value: await AsyncStorage.getItem("routes"),
+  // value: await AsyncStorage.getItem("routes"),/
   routes: [],
   status: "idle",
-  // userLocation: null,/////
+  userRegion: {
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0.02,
+    longitudeDelta: 0.02,
+  },
+  userRegionStatus: "idle",
 };
 
 export const fetchRoutes = createAsyncThunk("users/fetchRoutes", async () => {
   return JSON.parse(await AsyncStorage.getItem("routes"));
 });
+
+export const fetchUserRegion = createAsyncThunk(
+  "users/fetchUserRegion",
+  async () => {
+    let location = await Location.getLastKnownPositionAsync({});
+    return {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+      latitudeDelta: 0.008,
+      longitudeDelta: 0.008,
+    };
+  }
+);
 
 const saveRoutes = (routes) => {
   console.log(`setting routes equal to something: ${JSON.stringify(routes)}`);
@@ -165,6 +185,19 @@ export const routesSlice = createSlice({
         state.routes = routes;
       })
       .addCase(fetchRoutes.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.error.message;
+      })
+      .addCase(fetchUserRegion.pending, (state, action) => {
+        state.status = "loading";
+      })
+      .addCase(fetchUserRegion.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        // Add any fetched routes to the array
+        const userRegion = action.payload ? action.payload : [];
+        state.userRegion = userRegion;
+      })
+      .addCase(fetchUserRegion.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message;
       });

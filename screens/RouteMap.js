@@ -26,6 +26,7 @@ import {
   changeRouteName,
   updateRouteLocations,
   deleteRouteLocation,
+  fetchUserRegion,
 } from "../routesSlice";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -35,10 +36,13 @@ const RouteMap = ({
   },
   navigation,
 }) => {
-  const routes = useSelector((state) => state.routes.routes);
   const dispatch = useDispatch();
+  const routes = useSelector((state) => state.routes.routes);
+  const fetchedUserRegion = useSelector(
+    (state) => state.routes.userRegionStatus
+  );
+  const userRegion = useSelector((state) => state.routes.userRegion);
   [searchPhrase, setSearchPhrase] = useState(false);
-  const [userRegion, setUserRegion] = useState({});
   const [actualRegion, setActualRegion] = useState({});
   const [animating, setAnimating] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -46,11 +50,40 @@ const RouteMap = ({
   let panel;
   const GOOGLE_API_KEY = "AIzaSyBh1qntBtOC9rAx1gAXDvSnwYgVgiSc_rU";
 
+  // initial mount
   useEffect(() => {
-    // panel.show();
-    console.log("Going to route location");
-    goToRouteLocation(_mapView);
-  }, [routes[index].midpointLatitude, routes[index].midpointLongitude]);
+    panel.show();
+    (async () => {
+      let { status: locationGranted } =
+        await Location.requestForegroundPermissionsAsync();
+      if (locationGranted !== "granted") {
+        alert("Permission to access location was denied");
+        return;
+      }
+      if (fetchedUserRegion == "idle") {
+        dispatch(fetchUserRegion());
+      }
+    })();
+  }, []);
+
+  // route midpoint has changed
+  useEffect(
+    () => {
+      // go to new route midpoint
+      goToRouteLocation(_mapView);
+    },
+    routes.length > 0
+      ? [routes[index].midpointLatitude, routes[index].midpointLongitude]
+      : [0, 0]
+  );
+
+  // just fetched the user location; go if there are no
+  // locations on the route
+  useEffect(() => {
+    if (fetchedUserRegion == "succeeded") {
+      goToRouteLocation(_mapView);
+    }
+  }, [fetchedUserRegion]);
 
   const getInitialRegion = () => {
     if (
@@ -108,7 +141,6 @@ const RouteMap = ({
     ) {
       return true;
     }
-    // JSON.stringify(actualRegion) !== JSON.stringify(getInitialRegion());
     return false;
   };
 
@@ -235,19 +267,6 @@ const RouteMap = ({
       </ScaleDecorator>
     );
   };
-  useFocusEffect(
-    useCallback(() => {
-      // set state to initial value
-      Location.getCurrentPositionAsync({}).then((location) =>
-        setUserRegion({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-          latitudeDelta: 0.02,
-          longitudeDelta: 0.02,
-        })
-      );
-    }, [])
-  );
 
   return (
     <DismissKeyboardView style={{ flex: 1, backgroundColor: "blue" }}>

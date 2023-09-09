@@ -100,11 +100,11 @@ const UserRoutes = ({ route, navigation }) => {
 
   useFocusEffect(
     useCallback(() => {
-      if (fetchedRoutes == "success") {
+      if (fetchedRoutes == "succeeded") {
         // set state to initial value
         dispatch(removeEmptyRoutes());
       }
-    }, [])
+    }, [routes.length])
   );
 
   const renderItem = useCallback(({ item: route, index }) => {
