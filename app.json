@@ -2,7 +2,7 @@
   "expo": {
     "name": "gaea",
     "slug": "gaea",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,12 +15,11 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.dajayi.gaea",
-      "buildNumber": "1.0.1"
+      "buildNumber": "1.0.2"
     },
     "android": {
       "package": "com.dajayi.gaea",
       "versionCode": 2,
-      "versionName": "1.0.1",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

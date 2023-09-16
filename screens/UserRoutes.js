@@ -76,9 +76,9 @@ const UserRoutes = ({ route, navigation }) => {
   const fetchedRoutes = useSelector((state) => state.routes.status);
   const closeFunctions = new Array(routes.length);
   useEffect(() => {
-    console.log(
-      `fetched routes: ${fetchedRoutes}; routes:${JSON.stringify(routes)}`
-    );
+    // console.log(
+    //   `fetched routes: ${fetchedRoutes}; routes:${JSON.stringify(routes)}`
+    // );
     if (fetchedRoutes == "idle") {
       dispatch(fetchRoutes());
     }
@@ -136,8 +136,9 @@ const UserRoutes = ({ route, navigation }) => {
     // console.log("again");
     // setCloseFunctions(closeFunctions.concat([close]));
     // useEffect(() => {
-    //   console.log("again");
-    //   setCloseFunctions(closeFunctions.concat([close]));
+    //   setClose(close);
+    //   // console.log("again");
+    //   // setCloseFunctions(closeFunctions.concat([close]));
     // });
     return (
       <View style={[styles.row, styles.underlayLeft]}>
@@ -181,32 +182,38 @@ const UserRoutes = ({ route, navigation }) => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <GestureHandlerRootView>
-        <FlatList
-          data={routes}
-          bounces={false}
-          overScrollMode="never"
-          renderItem={renderItem}
-          keyExtractor={(item, index) =>
-            item.name + JSON.stringify(item.locations)
-          }
-          ItemSeparatorComponent={
-            <View
-              style={{
-                // borderBottomColor: 'red',
-                height: 0.6,
-                backgroundColor: "gray",
-                marginVertical: -0.3,
-              }}
-              key={"asdf"}
-            />
-          }
-          // contentContainerStyle={{backgroundColor: "gray"}}
-          activationDistance={1}
-        />
-      </GestureHandlerRootView>
-    </SafeAreaView>
+    <TouchableWithoutFeedback
+      style={{ flex: 1 }}
+      // onPress={() => close()}
+      accessible={false}
+    >
+      <SafeAreaView style={{ flex: 1 }}>
+        <GestureHandlerRootView>
+          <FlatList
+            data={routes}
+            bounces={false}
+            overScrollMode="never"
+            renderItem={renderItem}
+            keyExtractor={(item, index) =>
+              item.name + JSON.stringify(item.locations)
+            }
+            ItemSeparatorComponent={
+              <View
+                style={{
+                  // borderBottomColor: 'red',
+                  height: 0.6,
+                  backgroundColor: "gray",
+                  marginVertical: -0.3,
+                }}
+                key={"asdf"}
+              />
+            }
+            // contentContainerStyle={{backgroundColor: "gray"}}
+            activationDistance={1}
+          />
+        </GestureHandlerRootView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 };
 const styles = StyleSheet.create({

@@ -13,11 +13,19 @@ const initialState = {
     longitudeDelta: 0.02,
   },
   userRegionStatus: "idle",
+  bookmarkedLocations: {},
 };
 
 export const fetchRoutes = createAsyncThunk("users/fetchRoutes", async () => {
   return JSON.parse(await AsyncStorage.getItem("routes"));
 });
+
+export const fetchBookmarks = createAsyncThunk(
+  "users/fetchBookmarks",
+  async () => {
+    return JSON.parse(await AsyncStorage.getItem("bookmarks"));
+  }
+);
 
 export const fetchUserRegion = createAsyncThunk(
   "users/fetchUserRegion",
@@ -33,8 +41,11 @@ export const fetchUserRegion = createAsyncThunk(
 );
 
 const saveRoutes = (routes) => {
-  console.log(`setting routes equal to something: ${JSON.stringify(routes)}`);
   AsyncStorage.setItem("routes", JSON.stringify(routes));
+};
+
+const saveBookmarks = (bookmarks) => {
+  AsyncStorage.setItem("bookmarks", JSON.stringify(bookmarks));
 };
 
 export const routesSlice = createSlice({
@@ -57,28 +68,29 @@ export const routesSlice = createSlice({
       };
       state.routes = [newRoute].concat(state.routes);
       saveRoutes(state.routes);
-      console.log("added new route:" + JSON.stringify(state.routes));
+      // console.log("added new route:" + JSON.stringify(state.routes));
+    },
+
+    bookmarkLocation: (state, { payload: { placeId, locationData }, type }) => {
+      state.bookmarkedLocations[placeId] = locationData;
+      saveBookmarks(state.bookmarkedLocations);
+    },
+
+    unbookmarkLocation: (state, { payload: { placeId }, type }) => {
+      delete state.bookmarkedLocations[placeId];
+      saveBookmarks(state.bookmarkedLocations);
     },
 
     changeRouteName: (state, { payload: { index, newRouteName }, type }) => {
-      console.log("index: " + index + "; newRouteName: " + newRouteName);
-      console.log("state.routes: " + JSON.stringify(state.routes));
+      // console.log("index: " + index + "; newRouteName: " + newRouteName);
+      // console.log("state.routes: " + JSON.stringify(state.routes));
       state.routes[index].name = newRouteName;
       "Just updated route name: " + newRouteName;
       saveRoutes(state.routes);
     },
 
     setRoutes: (state, { payload, type }) => {
-      console.log(
-        "about to update value of routes. current: " +
-          JSON.stringify(state.routes) +
-          "; new: " +
-          JSON.stringify(payload)
-      );
       state.routes = payload;
-      console.log(
-        "Just updated value of routes: " + JSON.stringify(state.routes)
-      );
       saveRoutes(state.routes);
     },
 
@@ -104,9 +116,6 @@ export const routesSlice = createSlice({
       state.routes[index].midpointLongitude =
         midpointLongitude / (state.routes[index].locations.length - 1);
 
-      console.log(
-        "added new location to route: " + JSON.stringify(state.routes[index])
-      );
       saveRoutes(state.routes);
     },
 
@@ -134,7 +143,7 @@ export const routesSlice = createSlice({
         state.routes[index].midpointLongitude =
           midpointLongitude / (state.routes[index].locations.length - 1);
       }
-      console.log("updated route locations: " + JSON.stringify(newLocations));
+
       saveRoutes(state.routes);
     },
 
@@ -169,7 +178,7 @@ export const routesSlice = createSlice({
       state.routes = state.routes.filter(
         (route) => !(route.name == "" && route.locations.length == 1)
       );
-      console.log(`removed empty routes: ${JSON.stringify(state.routes)}`);
+
       saveRoutes(state.routes);
     },
   },
@@ -189,17 +198,27 @@ export const routesSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(fetchUserRegion.pending, (state, action) => {
-        state.status = "loading";
+        state.userRegionStatus = "loading";
       })
       .addCase(fetchUserRegion.fulfilled, (state, action) => {
-        state.status = "succeeded";
+        state.userRegionStatus = "succeeded";
         // Add any fetched routes to the array
         const userRegion = action.payload ? action.payload : [];
         state.userRegion = userRegion;
       })
       .addCase(fetchUserRegion.rejected, (state, action) => {
-        state.status = "failed";
+        state.userRegionStatus = "failed";
         state.error = action.error.message;
+      })
+      .addCase(fetchBookmarks.pending, (state, action) => {
+        state.bookmarksStatus = "loading";
+      })
+      .addCase(fetchBookmarks.fulfilled, (state, action) => {
+        state.bookmarksStatus = "succeeded";
+        state.bookmarkedLocations = action.payload ? action.payload : {};
+      })
+      .addCase(fetchBookmarks.rejected, (state, action) => {
+        state.bookmarksStatus = "failed";
       });
   },
 });
@@ -214,6 +233,8 @@ export const {
   updateRouteLocations,
   deleteRouteLocation,
   removeEmptyRoutes,
+  bookmarkLocation,
+  unbookmarkLocation,
 } = routesSlice.actions;
 
 export default routesSlice.reducer;
